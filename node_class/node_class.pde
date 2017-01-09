@@ -16,7 +16,7 @@ class Node {
         counter ++;
         float strokeWeight = (abs(position.x - nodes[i].position.x) + abs(position.y - nodes[i].position.y)) / 2;
         stroke(ellipseColor, strokeWeight);
-        //line(position.x, position.y, nodes[i].position.x, nodes[i].position.y); 
+        line(position.x, position.y, nodes[i].position.x, nodes[i].position.y); 
       }
     }
     //noStroke();

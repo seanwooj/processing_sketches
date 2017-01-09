@@ -1,12 +1,12 @@
 import processing.pdf.*;
 
-int distance = 100;
-int screenSize = 800;
-int numberOfNodes = 15000;
+int distance = 24;
+int screenSize = 400;
+int numberOfNodes = 200;
 int bgColor = 255;
 int ellipseColor = 0;
 float threshold = 1;
-float jitter = 3;
+float jitter = 5;
 
 boolean recording = false;
 PImage img;
@@ -15,7 +15,7 @@ Node[] nodes = new Node[numberOfNodes];
 
 void setup() {
   frameRate(30);
-  img = loadImage("test.png");
+  img = loadImage("test4.png");
   int nodesCreated = 0;
   
   while(nodesCreated < numberOfNodes) {
