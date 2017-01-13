@@ -1,13 +1,16 @@
 import processing.pdf.*;
 
+// 10" high
+// 3.5" wide
+
 int distance = 20;
-int screenSize = 576;
+PVector screenSize = new PVector(175, 500);
 int numberOfNodes = 300;
 int bgColor = 255;
 int ellipseColor = 0;
 
-int mean = screenSize / 2;
-int sd = screenSize / 10;
+float mean = screenSize.y / 2;
+float sd = screenSize.y / 10;
 
 boolean freakOutToggle = false;
 boolean recording = false;
@@ -24,7 +27,9 @@ void setup() {
 }
 
 void settings() {
-   size(screenSize, screenSize); 
+  int width = int(screenSize.x);
+  int height = int(screenSize.y);
+  size(width, height); 
 }
 
 void draw() {

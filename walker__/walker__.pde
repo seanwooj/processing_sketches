@@ -1,28 +1,26 @@
 class Walker {
-  int x;
-  int y;
+  PVector location;
   
   Walker(){
-    x = width/2;
-    y = height/2;
+    location = new PVector(width/2, height/2);
   }
   
   void display() {
     stroke(0);
-    point(x,y);
+    point(location.x, location.y);
   }
   
   void step() {
     float r = random(1);
 
     if(r < 0.3) {
-      x++;
+      location.x++;
     } else if (r < 0.6 && r > 0.3) {
-      y++;
+      location.y++;
     } else if (r < 0.8 && r > 0.6) {
-      x--;
+      location.x--;
     } else {
-      y--;
+      location.y--;
     }
   }
 }
