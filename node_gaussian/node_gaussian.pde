@@ -2,10 +2,11 @@ import processing.pdf.*;
 
 // 10" high
 // 3.5" wide
+// pixel density is 72px : 1"
 
 int distance = 20;
-PVector screenSize = new PVector(175, 500);
-int numberOfNodes = 300;
+PVector screenSize = new PVector(252, 720);
+int numberOfNodes = 400;
 int bgColor = 255;
 int ellipseColor = 0;
 
