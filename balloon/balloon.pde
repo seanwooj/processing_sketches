@@ -1,16 +1,76 @@
+PVector wind;
+float noiseLoc = 0;
+int balloonCount = 50;
+float maxDistance = 100;
+float forceMargin = 50;
+float maxForce = .1;
+Balloon[] balloons = new Balloon[balloonCount];
+WindSock windsock;
+
+void setup() {
+  size(500,500);
+  for(int i = 0; i < balloonCount; i++) {
+    balloons[i] = new Balloon();
+  }
+  
+  windsock = new WindSock(new PVector(width - 20, height - 20));
+}
+
+void draw(){
+  background(255);
+  float noiseX = map(noise(noiseLoc), 0, 1, -.1, .1);
+  float noiseY = map(noise(noiseLoc + 10000), 0, 1, -.1, .1);
+  wind = new PVector(noiseX, noiseY);
+  wind.setMag(0.01);
+  
+  windsock.update(wind);
+  windsock.display();
+  
+  for(int i = 0; i < balloonCount; i++) {
+    balloons[i].perform();
+  }
+  noiseLoc += .01;
+}
+
+float forceValueAtValue(float value) {
+ return 0.0;
+}
+
+
+
+class WindSock {
+  PVector wind;
+  PVector location;
+  
+  WindSock(PVector location_) {
+    location = location_;
+  }
+  
+  void update(PVector wind_){
+    wind = wind_;
+  }
+  
+  void display() {
+    PVector drawWind = wind.copy().mult(1500);
+    line(location.x, location.y, location.x + drawWind.x, location.y + drawWind.y);
+  }
+}
+
 class Balloon {
   PVector location;
   PVector velocity;
   PVector acceleration;
   float size;
   PVector helium;
+  float mass;
   
   Balloon() {
     location = new PVector(random(width), random(height));
     velocity = new PVector(0,0);
     acceleration = new PVector(0, -0.1);
     helium = new PVector(0, random(-.05, 0));
-    size = map(helium.y, 0, -.05, 5, 30);
+    size = map(helium.y, 0, -.05, 5, 100);
+    mass = 10.0;
   }
   
   void perform() {
@@ -21,9 +81,10 @@ class Balloon {
   void update() {
     applyForce(wind);
     applyForce(helium);
+    applyForce(edgeForce());
     velocity.add(acceleration);
-    checkEdges();
-    velocity.limit(3);
+    
+    velocity.limit(4);
     location.add(velocity);
     acceleration.mult(0);
   }
@@ -33,54 +94,53 @@ class Balloon {
     
     ellipse(location.x, location.y, size, size);
     
-    PVector velocityCoord = PVector.add(location, velocity);
+    PVector multVelocity = velocity.copy().mult(5);
+    PVector velocityCoord = PVector.add(location, multVelocity);
     line(location.x, location.y, velocityCoord.x, velocityCoord.y);
+    
+    for(int i = 0; i < balloonCount; i++) {
+      if(PVector.sub(location, balloons[i].location).mag() < maxDistance){
+        //line(location.x, location.y, balloons[i].location.x, balloons[i].location.y);
+      }
+    }
   }
   
-  void checkEdges() {
-    if(location.x > width) {
-      location.x = width;
-      velocity.x *= -1;
-    } else if (location.x < 0) {
-      location.x = 0;
-      velocity.x *= -1;
+  PVector edgeForce() {
+    PVector f = new PVector(0,0);
+    float rightMargin = width - forceMargin;
+    float leftMargin = forceMargin;
+    float topMargin = forceMargin;
+    float bottomMargin = height - forceMargin;
+    
+    if(location.x > rightMargin){
+      f.add(new PVector(calcEdgeForce(location.x - rightMargin, "neg"), 0));
+    } else if (location.x < leftMargin) {
+      f.add(new PVector(calcEdgeForce(leftMargin - location.x, "pos"), 0));
     }
     
-    if (location.y > height) {
-      location.y = height;
-      velocity.y *= -1;
-    } else if (location.y < 0) {
-      location.y = 0;
-      velocity.y *= -1;
+    if(location.y > bottomMargin){
+      f.add(new PVector(0, calcEdgeForce(location.y - bottomMargin, "neg")));
+    } else if (location.y < topMargin) {
+      f.add(new PVector(0, calcEdgeForce(topMargin - location.y, "pos")));
+    }
+    
+    return f;
+  }
+  
+  float calcEdgeForce(float difference, String negOrPos) {
+    float edgeForce = map(difference, 0, forceMargin, 0, maxForce);
+    if(negOrPos == "pos") {
+      return edgeForce;
+    } else if (negOrPos == "neg") {
+      return edgeForce * -1;
+    } else {
+      return 0;
     }
   }
-  
+    
   void applyForce(PVector force) {
-    acceleration.add(force);
+    PVector f = force.copy();
+    f.div(mass);
+    acceleration.add(f);
   }
-}
-
-PVector wind;
-float noiseLoc = 0;
-Balloon[] balloons = new Balloon[20];
-
-void setup() {
-  size(500,500);
-  for(int i = 0; i < 20; i++) {
-    balloons[i] = new Balloon();
-  }
-}
-
-void draw(){
-  background(255);
-  float noiseX = map(noise(noiseLoc), 0, 1, -.1, .1);
-  float noiseY = map(noise(noiseLoc + 10000), 0, 1, -.1, .1);
-  wind = new PVector(noiseX, noiseY);
-  wind.normalize().mult(.01);
-  println(noise(noiseLoc));
-  
-  for(int i = 0; i < 20; i++) {
-    balloons[i].perform();
-  }
-  noiseLoc += .01;
 }
