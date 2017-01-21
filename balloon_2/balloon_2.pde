@@ -40,6 +40,8 @@ class Balloon {
     applyForce(wind);
     applyForce(getWindResistance());
     
+    applyForce(helium);
+    
     applyForce(edgeForce());
     applyForce(getFriction());
     
