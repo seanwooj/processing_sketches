@@ -5,14 +5,14 @@ float maxDistance = 100;
 float forceMargin = 50;
 float maxForce = 10;
 float minBalloonSize = 5;
-float maxBalloonSize = 100;
+float maxBalloonSize = 20;
 float minMass = 5;
 float maxMass = 20;
 
 Balloon[] balloons = new Balloon[balloonCount];
 WindSock windsock;
 Liquid liquid;
-Attractor attractor;
+ArrayList<Attractor> attractors = new ArrayList<Attractor>();
 
 void settings() {
   size(1024,786);
@@ -24,7 +24,6 @@ void setup() {
   }
   liquid = new Liquid(0, height - 100, width, 100, 0.1);
   windsock = new WindSock(new PVector(width/2, height/2));
-  attractor = new Attractor();
 }
 
 void draw(){
@@ -37,15 +36,26 @@ void draw(){
   windsock.update(wind);
   windsock.display();
   
-  attractor.display();
+  for(int i = 0; i < attractors.size(); i++) {
+    attractors.get(i).display();
+  }
   
   for(int i = 0; i < balloonCount; i++) {
     balloons[i].perform();
   }
   
+  if(mousePressed) {
+    createAttractor();
+  }
+  
   liquid.display();
   
   noiseLoc += .01;
+}
+
+void createAttractor() {
+  PVector mouseLoc = new PVector(mouseX, mouseY);
+  attractors.add(new Attractor(mouseLoc));
 }
 
 float forceValueAtValue(float value) {

@@ -5,6 +5,7 @@ class Balloon {
   float size;
   PVector helium;
   float mass;
+  float angle;
   
   Balloon() {
     location = new PVector(random(width), random(height));
@@ -13,6 +14,7 @@ class Balloon {
     helium = new PVector(0, random(-.05, 0));
     size = map(helium.y, 0, -.05, minBalloonSize, maxBalloonSize);
     mass = map(size, 0, maxBalloonSize, minMass, maxMass);
+    angle = 0;
   }
   
   void perform() {
@@ -35,7 +37,7 @@ class Balloon {
   
   
   void update() {
-    applyForce(attractor.attract(this));
+    // applyForce(attractor.attract(this));
     
     applyForce(wind);
     applyForce(getWindResistance());
@@ -47,10 +49,7 @@ class Balloon {
       applyForce(liquid.calculateDrag(this));
     }
     
-    //for(int i = 0; i < balloonCount; i++) {
-    //  applyForce(balloons[i].attract(this));
-    //}
-    
+    angle = atan2(velocity.y,velocity.x);
     
     velocity.add(acceleration);
     
@@ -61,18 +60,25 @@ class Balloon {
   
   void display() {
     stroke(0);
-    
-    ellipse(location.x, location.y, size, size);
+    pushMatrix();
+    rectMode(CENTER);
+    translate(location.x, location.y);
+    rotate(angle);
+    rect(0, 0, size, size);
     
     PVector multVelocity = velocity.copy().mult(5);
-    PVector velocityCoord = PVector.add(location, multVelocity);
-    line(location.x, location.y, velocityCoord.x, velocityCoord.y);
+    PVector velocityCoord = PVector.add(new PVector(0,0), multVelocity);
+    
+    rotate(-angle);
+    line(0, 0, velocityCoord.x, velocityCoord.y);
     
     for(int i = 0; i < balloonCount; i++) {
       if(PVector.sub(location, balloons[i].location).mag() < maxDistance){
-        //line(location.x, location.y, balloons[i].location.x, balloons[i].location.y);
+        //line(0, 0, balloons[i].location.x - location.x, balloons[i].location.y - location.y);
       }
     }
+    popMatrix();
+    rectMode(CORNER);
   }
   
   PVector edgeForce() {
