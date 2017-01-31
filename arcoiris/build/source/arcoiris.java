@@ -4,6 +4,7 @@ import processing.event.*;
 import processing.opengl.*; 
 
 import java.util.Iterator; 
+import processing.pdf.*; 
 
 import java.util.HashMap; 
 import java.util.ArrayList; 
@@ -18,11 +19,40 @@ public class arcoiris extends PApplet {
 
 
 
-// first we need to create an arc which can take in an angle length, and beginning angle
-// or a beginning angle and end angle
-// and give it a style. possibly it would need to keep track of noise poisition
-// as well as amplitude. but let's begin.
-// don't forget to add the distance from origin
+
+// Today, I would like to add the ability to create new arcs.
+// I'd like to move away from using the tan() function, in lieu of using
+// grouping based on a combination of sin or cosine, which will keep each arc
+// in the correct order.
+
+// I'd also like to have a consistent rate of resolution in each arc
+// though having the arcs have a varied level of resolution can lead to interesting
+// results, I'd like to tend towards slightly more consistent in this sketch.
+
+// I'd also like to learn how to import/create my own importable class, such that
+// I don't have to keep copying the timestamp function.
+
+final float PHI = (1+ sqrt(5))/2; // golden ratio
+
+public void settings() {
+  size(500,500);
+}
+
+public void setup() {
+  String frameWord = "image-" + timestamp() + ".pdf";
+  beginRecord(PDF, frameWord);
+
+    background(255);
+    noFill();
+    strokeWeight(0.01f);
+    
+
+    ArcoIris arcoIris = new ArcoIris(200);
+    arcoIris.display();
+  endRecord();
+}
+
+
 
 
 class Arc {
@@ -32,7 +62,6 @@ class Arc {
   float r;
   float resolution;
   PVector origin;
-  // noise between parts of the angle as the circle broadens.
 
   Arc(float startAngle_, float arcLength_, float startNoise_, float r_, float resolution_, PVector origin_) {
     startAngle = startAngle_;
@@ -43,15 +72,28 @@ class Arc {
     origin = origin_;
   }
 
-  public void display() {
+  public void display(boolean reverse) {
     ArrayList<PVector> vectors = new ArrayList<PVector>();
-    for(float i = startAngle; i <= (startAngle + arcLength); i += resolution) {
-      float x = cos(i) * r;
-      float y = sin(i) * r;
-      PVector point = new PVector(x,y);
-      point.setMag(point.mag() + 5 * noise(i * 20));
-      vectors.add(point);
+
+    // figure out a way to refactor this (this method saves a lot of time)
+    if(!reverse) {
+      for(float i = startAngle; i <= (startAngle + arcLength); i += resolution) {
+        float x = cos(i) * r;
+        float y = sin(i) * r;
+        PVector point = new PVector(x,y);
+        point.setMag(point.mag() + 10 * noise(i * 10));
+        vectors.add(point);
+      }
+    } else {
+      for (float i = startAngle + arcLength; i >= startAngle; i -= resolution) {
+        float x = cos(i) * r;
+        float y = sin(i) * r;
+        PVector point = new PVector(x,y);
+        point.setMag(point.mag() + 10 * noise(i * 10));
+        vectors.add(point);
+      }
     }
+
 
     Iterator<PVector> it = vectors.iterator();
 
@@ -69,51 +111,56 @@ class Arc {
 
 }
 
-ArrayList<Arc> arcs = new ArrayList<Arc>();
-int arcCount = 80;
-final float PHI = (1+ sqrt(5))/2; // golden ratio
+class ArcoIris {
+  ArrayList<Arc> arcs;
+  int arcCount;
+  float currentR;
 
-public void setup() {
-  background(255);
-  noFill();
-  strokeWeight(0.01f);
-  
+  ArcoIris(int arcCount_) {
+    arcCount = arcCount_;
+    arcs = new ArrayList<Arc>();
+    currentR = PApplet.parseInt(random(10, 50));
 
-  for(int i = 0; i <= arcCount; i++) {
-    float startAngle = i * sin(i) * PHI;
-    float arcLength = PI / 2;
-    println(arcLength);
-    float startNoise = .001f * i;
-    float r = 40 + PApplet.parseFloat(i) * PHI;
-    float resolution = .2f - ( PApplet.parseFloat(i) * .001f ); // this risks going below 0 and getting caught in loop
-    PVector origin = new PVector(width/2, height); // begin at bottom.
+    for(int i = 0; i <= arcCount; i++) {
+      float startAngle = -PI;
+      float arcLength = PI; //- (sin(PI * (float(i) / arcCount)) * PHI);
+      float startNoise = .01f * i;
+      // the below can cause memory issues if the tan calculation returns a negative (which it definitely sometimes does.)
+      float r = currentR + PHI * sin(i * .1f);//tan(TAU * float(i)/arcCount + map(noise(.01 * i), 0, 1, -TAU, TAU));
+      // resolution is set to create points of inflection every pixel.
+      float resolution = asin(1/r);
+      PVector origin = new PVector(width/2, height); // begin at bottom.
 
-    arcs.add(new Arc(startAngle, arcLength, startNoise, r, resolution, origin));
+      arcs.add(new Arc(startAngle, arcLength, startNoise, r, resolution, origin));
+      currentR = r;
+    }
   }
 
-  for(int i = 0; i <= arcCount; i++) {
-    float startAngle = -TAU;
-    float arcLength = TAU - (sin(TAU * (PApplet.parseFloat(i) / arcCount)) * PHI);
-    println(arcLength);
-    float startNoise = .001f * i;
-    float r = 40 + PApplet.parseFloat(i) * .1f;
-    float resolution = .2f - ( PApplet.parseFloat(i) * .001f ); // this risks going below 0 and getting caught in loop
-    PVector origin = new PVector(width/2, height); // begin at bottom.
-
-    arcs.add(new Arc(startAngle, arcLength, startNoise, r, resolution, origin));
-  }
-
-  Iterator<Arc> it = arcs.iterator();
-
-  while(it.hasNext()) {
-    Arc a = it.next();
-    println("happened");
-    a.display();
+  public void display() {
+    Iterator<Arc> it = arcs.iterator();
+    int counter = 0;
+    while(it.hasNext()) {
+      Arc a = it.next();
+      a.display( (counter % 2 == 0) );
+      counter++;
+    }
   }
 }
 
-public void settings() {
-  size(500,500);
+
+
+public String timestamp() {
+  int[] dateNumbers = new int[6];
+  dateNumbers[0] = year();
+  dateNumbers[1] = month();
+  dateNumbers[2] = day();
+  dateNumbers[3] = hour();
+  dateNumbers[4] = minute();
+  dateNumbers[5] = second();
+
+  String joinedTimestamp = join(nf(dateNumbers, 2), "");
+
+  return joinedTimestamp;
 }
   static public void main(String[] passedArgs) {
     String[] appletArgs = new String[] { "arcoiris" };
