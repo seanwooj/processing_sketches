@@ -27,96 +27,73 @@ void setup() {
     strokeWeight(0.01);
     smooth();
 
-    ArcoIris arcoIris = new ArcoIris(200);
+    ArcoIris arcoIris = new ArcoIris(50, 400, 40, -PI, PI);
     arcoIris.display();
+    println(arcoIris.currentR);
+    ArcoIris arcoIris2 = new ArcoIris(100, 1020203124, arcoIris.currentR, -PI + QUARTER_PI, QUARTER_PI);
+    arcoIris2.display();
   endRecord();
 }
 
+class ArcoIrisMaster {
+  private ArrayList<ArcoIris> arcoIrises;
+  private int arcIrisCount;
 
+  ArcoIrisMaster() {
 
-
-class Arc {
-  float startAngle; // does this start at the y axis facing up?
-  float arcLength;
-  float startNoise;
-  float r;
-  float resolution;
-  PVector origin;
-
-  Arc(float startAngle_, float arcLength_, float startNoise_, float r_, float resolution_, PVector origin_) {
-    startAngle = startAngle_;
-    arcLength = arcLength_;
-    startNoise = startNoise_;
-    r = r_;
-    resolution = resolution_;
-    origin = origin_;
   }
-
-  void display(boolean reverse) {
-    ArrayList<PVector> vectors = new ArrayList<PVector>();
-
-    // figure out a way to refactor this (this method saves a lot of time)
-    if(!reverse) {
-      for(float i = startAngle; i <= (startAngle + arcLength); i += resolution) {
-        float x = cos(i) * r;
-        float y = sin(i) * r;
-        PVector point = new PVector(x,y);
-        point.setMag(point.mag() + 10 * noise(i * 10));
-        vectors.add(point);
-      }
-    } else {
-      for (float i = startAngle + arcLength; i >= startAngle; i -= resolution) {
-        float x = cos(i) * r;
-        float y = sin(i) * r;
-        PVector point = new PVector(x,y);
-        point.setMag(point.mag() + 10 * noise(i * 10));
-        vectors.add(point);
-      }
-    }
-
-
-    Iterator<PVector> it = vectors.iterator();
-
-    pushMatrix();
-      translate(origin.x, origin.y);
-      beginShape();
-        while(it.hasNext()) {
-          PVector loc = it.next();
-          vertex(loc.x, loc.y);
-        }
-      endShape();
-    popMatrix();
-  }
-
-
 }
 
 class ArcoIris {
-  ArrayList<Arc> arcs;
-  int arcCount;
-  float currentR;
+  private ArrayList<Arc> arcs;
+  private int arcCount;
+  public float currentR;
+  public float startAngle;
+  public float arcLength;
+  private PVector origin;
 
-  ArcoIris(int arcCount_) {
+  ArcoIris(int arcCount_, float noiseTime, float currentR_, float startAngle_, float arcLength_) {
     arcCount = arcCount_;
+    currentR = currentR_;
+    arcLength = arcLength_;
+    startAngle = startAngle_;
+    origin = new PVector(width/2, height); // begin at bottom.
     arcs = new ArrayList<Arc>();
-    currentR = int(random(10, 50));
+
+    createArcs(noiseTime, random(5,20));
+  }
+
+  private void createArcs(float noiseTime_, float noiseMag_) {
+    float noiseMag = noiseMag_;
+    float noiseTime = noiseTime_;
+
 
     for(int i = 0; i <= arcCount; i++) {
-      float startAngle = -PI;
-      float arcLength = PI; //- (sin(PI * (float(i) / arcCount)) * PHI);
-      float startNoise = .01 * i;
-      // the below can cause memory issues if the tan calculation returns a negative (which it definitely sometimes does.)
-      float r = currentR + PHI * sin(i * .1);//tan(TAU * float(i)/arcCount + map(noise(.01 * i), 0, 1, -TAU, TAU));
+      float startNoise = noiseTime + (.01 * i);
+      float r = currentR + 1;
       // resolution is set to create points of inflection every pixel.
       float resolution = asin(1/r);
-      PVector origin = new PVector(width/2, height); // begin at bottom.
 
-      arcs.add(new Arc(startAngle, arcLength, startNoise, r, resolution, origin));
+      arcs.add(new Arc(startAngle, arcLength, startNoise, r, resolution, noiseMag, origin));
       currentR = r;
     }
   }
 
-  void display() {
+  // because of added noise, it may be slightly inaccurate, but probably
+  // useful enough for our purposes.
+  public boolean willExtendViewport() {
+    float endAngle = startAngle + arcLength;
+    PVector leftOuter = new PVector(cos(startAngle), sin(startAngle)).mult(currentR).add(origin);
+    PVector rightOuter = new PVector(cos(endAngle), sin(endAngle)).mult(currentR).add(origin);
+
+    println(leftOuter);
+    println(rightOuter);
+
+    return leftOuter.x < 0 || leftOuter.y > height || rightOuter.x > width || rightOuter.y > height;
+  }
+
+  public void display() {
+    println(willExtendViewport());
     Iterator<Arc> it = arcs.iterator();
     int counter = 0;
     while(it.hasNext()) {
