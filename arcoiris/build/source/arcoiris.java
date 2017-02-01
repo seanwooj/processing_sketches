@@ -25,10 +25,6 @@ public class arcoiris extends PApplet {
 // grouping based on a combination of sin or cosine, which will keep each arc
 // in the correct order.
 
-// I'd also like to have a consistent rate of resolution in each arc
-// though having the arcs have a varied level of resolution can lead to interesting
-// results, I'd like to tend towards slightly more consistent in this sketch.
-
 // I'd also like to learn how to import/create my own importable class, such that
 // I don't have to keep copying the timestamp function.
 
