@@ -27,20 +27,53 @@ void setup() {
     strokeWeight(0.01);
     smooth();
 
-    ArcoIris arcoIris = new ArcoIris(50, 400, 40, -PI, PI);
-    arcoIris.display();
-    println(arcoIris.currentR);
-    ArcoIris arcoIris2 = new ArcoIris(100, 1020203124, arcoIris.currentR, -PI + QUARTER_PI, QUARTER_PI);
-    arcoIris2.display();
+    ArcoIrisMaster master = new ArcoIrisMaster();
+    master.recurse();
+    master.display();
   endRecord();
 }
 
 class ArcoIrisMaster {
   private ArrayList<ArcoIris> arcoIrises;
-  private int arcIrisCount;
+  private int arcoIrisCount;
+  private float r;
 
   ArcoIrisMaster() {
+    arcoIrisCount = 20;
+    r = random(30, 100);
+    arcoIrises = new ArrayList<ArcoIris>();
+  }
 
+  void display() {
+    Iterator<ArcoIris> it = arcoIrises.iterator();
+
+    while(it.hasNext()) {
+      ArcoIris a = it.next();
+      a.display();
+    }
+  }
+
+  void recurse() {
+    if(arcoIrisCount == 0) {
+      return;
+    } else {
+      arcoIrisCount--;
+      boolean endLoop = false;
+      ArcoIris a;
+      while(!endLoop) {
+        float startPos = random(-PI, 0);
+        a = new ArcoIris(int(random(10,30)), random(0,20000), r, startPos, random(0, 0 - startPos));
+        if(a.willExtendViewport()) {
+          endLoop = false;
+        } else {
+          endLoop = true;
+          arcoIrises.add(a);
+          r = a.currentR;
+        }
+      }
+
+      recurse();
+    }
   }
 }
 
@@ -60,7 +93,7 @@ class ArcoIris {
     origin = new PVector(width/2, height); // begin at bottom.
     arcs = new ArrayList<Arc>();
 
-    createArcs(noiseTime, random(5,20));
+    createArcs(noiseTime, random(5,80));
   }
 
   private void createArcs(float noiseTime_, float noiseMag_) {
@@ -70,7 +103,7 @@ class ArcoIris {
 
     for(int i = 0; i <= arcCount; i++) {
       float startNoise = noiseTime + (.01 * i);
-      float r = currentR + 1;
+      float r = currentR + 2 * noise(startNoise);
       // resolution is set to create points of inflection every pixel.
       float resolution = asin(1/r);
 
@@ -81,19 +114,18 @@ class ArcoIris {
 
   // because of added noise, it may be slightly inaccurate, but probably
   // useful enough for our purposes.
+
+  // this still doesn't check for if the arcs pass above the viewport (less than 0 on the y axis)
+  // so that will have to be added later.
   public boolean willExtendViewport() {
     float endAngle = startAngle + arcLength;
     PVector leftOuter = new PVector(cos(startAngle), sin(startAngle)).mult(currentR).add(origin);
     PVector rightOuter = new PVector(cos(endAngle), sin(endAngle)).mult(currentR).add(origin);
 
-    println(leftOuter);
-    println(rightOuter);
-
     return leftOuter.x < 0 || leftOuter.y > height || rightOuter.x > width || rightOuter.y > height;
   }
 
   public void display() {
-    println(willExtendViewport());
     Iterator<Arc> it = arcs.iterator();
     int counter = 0;
     while(it.hasNext()) {
