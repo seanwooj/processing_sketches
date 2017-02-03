@@ -20,21 +20,10 @@ public class arcoiris extends PApplet {
 
 
 
-// Today, I would like to add the ability to create new arcs.
-// I'd like to move away from using the tan() function, in lieu of using
-// grouping based on a combination of sin or cosine, which will keep each arc
-// in the correct order.
-
-// I'd also like to learn how to import/create my own importable class, such that
-// I don't have to keep copying the timestamp function.
-
-// I'd also like the ability to check if an arc or point is outside the bounds
-// and just remove it, for rendering's sake.
-
 final float PHI = (1+ sqrt(5))/2; // golden ratio
 
 public void settings() {
-  size(500,500);
+  size(240,400);
 }
 
 public void setup() {
@@ -54,11 +43,9 @@ public void setup() {
 
 class ArcoIrisMaster {
   private ArrayList<ArcoIris> arcoIrises;
-  private int arcoIrisCount;
   private float r;
 
   ArcoIrisMaster() {
-    arcoIrisCount = 20;
     r = random(30, 100);
     arcoIrises = new ArrayList<ArcoIris>();
   }
@@ -77,10 +64,16 @@ class ArcoIrisMaster {
       return;
     } else {
       float startPos = random(-PI, 0);
-      ArcoIris a = new ArcoIris(PApplet.parseInt(random(10,30)), random(0,20000), r, startPos, random(TAU/8, 0 - startPos));
+      // play around with this one.
+      float minLength = map(r, height, 0, 0, PI);
+      float maxLength = map(r, height, 0, PI/20, PI);
+      int minCount = PApplet.parseInt(map(r, height, 0, 0, 100));
+      int maxCount = PApplet.parseInt(map(r, height, 0, 20, 200));
+
+      ArcoIris a = new ArcoIris(PApplet.parseInt(random(minCount, maxCount)), random(0,20000), r, startPos, random(minLength, maxLength));
       while(a.willExtendViewport()) {
         startPos = random(-PI, 0);
-        a = new ArcoIris(PApplet.parseInt(random(0,30)), random(0,20000), r, startPos, random(TAU/8, 0 - startPos));
+        a = new ArcoIris(PApplet.parseInt(random(minCount,maxCount)), random(0,20000), r, startPos, random(minLength, maxLength));
       }
       arcoIrises.add(a);
       r = a.currentR;
@@ -97,6 +90,7 @@ class ArcoIris {
   public float startAngle;
   public float arcLength;
   private PVector origin;
+  private float rMult;
 
   ArcoIris(int arcCount_, float noiseTime, float currentR_, float startAngle_, float arcLength_) {
     arcCount = arcCount_;
@@ -105,6 +99,7 @@ class ArcoIris {
     startAngle = startAngle_;
     origin = new PVector(width/2, height); // begin at bottom.
     arcs = new ArrayList<Arc>();
+    rMult = sq(random(0,1));
 
     createArcs(noiseTime, random(5,20));
   }
@@ -116,8 +111,9 @@ class ArcoIris {
 
     for(int i = 0; i <= arcCount; i++) {
       float startNoise = noiseTime + (.01f * i);
-      // float r = currentR + 2 * noise(startNoise);
-      float r = currentR + PHI * sin(i * .1f);
+      // float r = currentR + noise(startNoise) * PHI;
+      float r = currentR + ( rMult * cos(sin(sq(i) * PHI * TAU) + 1) );
+      // float r = currentR + sin(i / currentR);
       // resolution is set to create points of inflection every pixel.
       float resolution = asin(1/r);
 
@@ -193,7 +189,7 @@ class Arc {
         float x = cos(i) * r;
         float y = sin(i) * r;
         PVector point = new PVector(x,y);
-        point.setMag(point.mag() + noiseMag * noise(i * 10));
+        point.setMag(point.mag() + noiseMag * noise(startNoise + i * 10));
         vectors.add(point);
       }
     } else {
@@ -201,7 +197,7 @@ class Arc {
         float x = cos(i) * r;
         float y = sin(i) * r;
         PVector point = new PVector(x,y);
-        point.setMag(point.mag() + 10 * noise(i * 10));
+        point.setMag(point.mag() + 10 * noise(startNoise + i * 10));
         vectors.add(point);
       }
     }

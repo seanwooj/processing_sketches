@@ -26,7 +26,7 @@ class Arc {
         float x = cos(i) * r;
         float y = sin(i) * r;
         PVector point = new PVector(x,y);
-        point.setMag(point.mag() + noiseMag * noise(i * 10));
+        point.setMag(point.mag() + noiseMag * noise(startNoise + i * 10));
         vectors.add(point);
       }
     } else {
@@ -34,7 +34,7 @@ class Arc {
         float x = cos(i) * r;
         float y = sin(i) * r;
         PVector point = new PVector(x,y);
-        point.setMag(point.mag() + 10 * noise(i * 10));
+        point.setMag(point.mag() + 10 * noise(startNoise + i * 10));
         vectors.add(point);
       }
     }
