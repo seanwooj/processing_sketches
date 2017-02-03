@@ -54,23 +54,17 @@ class ArcoIrisMaster {
   }
 
   void recurse() {
-    if(arcoIrisCount == 0) {
+    if(r > height) {
       return;
     } else {
-      arcoIrisCount--;
-      boolean endLoop = false;
-      ArcoIris a;
-      while(!endLoop) {
-        float startPos = random(-PI, 0);
-        a = new ArcoIris(int(random(10,30)), random(0,20000), r, startPos, random(0, 0 - startPos));
-        if(a.willExtendViewport()) {
-          endLoop = false;
-        } else {
-          endLoop = true;
-          arcoIrises.add(a);
-          r = a.currentR;
-        }
+      float startPos = random(-PI, 0);
+      ArcoIris a = new ArcoIris(int(random(10,30)), random(0,20000), r, startPos, random(QUARTER_PI, 0 - startPos));
+      while(a.willExtendViewport()) {
+        startPos = random(-PI, 0);
+        a = new ArcoIris(int(random(0,30)), random(0,20000), r, startPos, random(QUARTER_PI, 0 - startPos));
       }
+      arcoIrises.add(a);
+      r = a.currentR;
 
       recurse();
     }
@@ -93,7 +87,7 @@ class ArcoIris {
     origin = new PVector(width/2, height); // begin at bottom.
     arcs = new ArrayList<Arc>();
 
-    createArcs(noiseTime, random(5,80));
+    createArcs(noiseTime, random(5,20));
   }
 
   private void createArcs(float noiseTime_, float noiseMag_) {
@@ -103,7 +97,8 @@ class ArcoIris {
 
     for(int i = 0; i <= arcCount; i++) {
       float startNoise = noiseTime + (.01 * i);
-      float r = currentR + 2 * noise(startNoise);
+      // float r = currentR + 2 * noise(startNoise);
+      float r = currentR + PHI * sin(i * .1);
       // resolution is set to create points of inflection every pixel.
       float resolution = asin(1/r);
 
