@@ -64,7 +64,7 @@ class ArcoIrisMaster {
       int minCount = int(map(r, height, 0, 0, 100));
       int maxCount = int(map(r, height, 0, 20, 200));
 
-      ArcoIris a = new ArcoIris(int(random(minCount, maxCount)), random(0,20000), r, startPos, random(minLength, maxLength));
+      ArcoIris a = new ArcoIris(int(random(minCount, maxCount)), random(0,20000), r, startPos, random(0, PI));
       while(a.willExtendViewport()) {
         startPos = random(-PI, 0);
         a = new ArcoIris(int(random(minCount,maxCount)), random(0,20000), r, startPos, random(minLength, maxLength));
@@ -139,20 +139,4 @@ class ArcoIris {
       counter++;
     }
   }
-}
-
-
-
-String timestamp() {
-  int[] dateNumbers = new int[6];
-  dateNumbers[0] = year();
-  dateNumbers[1] = month();
-  dateNumbers[2] = day();
-  dateNumbers[3] = hour();
-  dateNumbers[4] = minute();
-  dateNumbers[5] = second();
-
-  String joinedTimestamp = join(nf(dateNumbers, 2), "");
-
-  return joinedTimestamp;
 }
